@@ -1,0 +1,21 @@
+{
+  "name": "@world-of-npcs/navigation",
+  "version": "0.1.0",
+  "description": "Navigation and pathfinding system for world-of-npcs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@world-of-npcs/world-model": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "@world-of-npcs/world-model": ">=0.1.0"
+  }
+}
