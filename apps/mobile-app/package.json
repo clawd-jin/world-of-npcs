@@ -1,1 +1,21 @@
-{"name": "world-of-npcs-mobile-app", "version": "1.0.0"}
+{
+  "name": "world-of-npcs-mobile",
+  "version": "1.0.0",
+  "description": "World of NPCs Mobile Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios"
+  },
+  "dependencies": {
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "react-native": "0.73.2",
+    "react": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "typescript": "^5.3.3"
+  }
+}
