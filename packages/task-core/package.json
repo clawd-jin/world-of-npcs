@@ -1,0 +1,17 @@
+{
+  "name": "@world-of-npcs/task-core",
+  "version": "0.1.0",
+  "description": "Task system core for World of NPCs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@world-of-npcs/shared-types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
