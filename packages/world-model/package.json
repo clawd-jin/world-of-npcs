@@ -1,1 +1,12 @@
-{"name": "@world-of-npcs/world-model", "version": "1.0.0"}
+{
+  "name": "@world-of-npcs/world-model",
+  "version": "1.0.0",
+  "description": "World model package for world-of-npcs",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["npc", "world", "simulation"],
+  "license": "MIT"
+}
