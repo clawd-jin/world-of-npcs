@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet Express HQ - Pixel View</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-dark: #0a0a12;
+      --bg-panel: #1a1a2a;
+      --accent-gold: #ffd700;
+      --accent-cyan: #00d4ff;
+      --accent-purple: #6c5ce7;
+      --text-light: #e0e0e0;
+      --text-dim: #888;
+    }
+    
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      overflow: hidden;
+      height: 100vh;
+    }
+    
+    #game {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    /* Header */
+    #header {
+      background: linear-gradient(180deg, #2a2a3a 0%, #1a1a2a 100%);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 4px solid var(--accent-gold);
+      image-rendering: pixelated;
+    }
+    
+    #header h1 {
+      color: var(--accent-gold);
+      font-size: 14px;
+      text-shadow: 3px 3px 0 #000;
+      letter-spacing: 1px;
+    }
+    
+    #header-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 8px;
+      color: var(--accent-cyan);
+      align-items: center;
+    }
+    
+    .view-toggle {
+      background: linear-gradient(180deg, #6c5ce7 0%, #4a4a7a 100%);
+      border: 3px solid #8a7ce7;
+      color: #fff;
+      padding: 8px 16px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .view-toggle:hover {
+      background: linear-gradient(180deg, #8a7cf7 0%, #5a5a9a 100%);
+      transform: scale(1.05);
+    }
+    
+    .view-toggle.city-mode {
+      background: linear-gradient(180deg, #e67e22 0%, #9a5a2a 100%);
+      border-color: #f7a04a;
+    }
+    
+    /* Main Game Area */
+    #main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      background: #0d0d15;
+    }
+    
+    /* Pixel Office Background */
+    #office {
+      flex: 1;
+      position: relative;
+      background: 
+        /* Floor tiles */
+        repeating-linear-gradient(0deg, transparent, transparent 31px, #1a1a25 31px, #1a1a25 32px),
+        repeating-linear-gradient(90deg, transparent, transparent 31px, #1a1a25 31px, #1a1a25 32px),
+        /* Base color */
+        #12121a;
+      image-rendering: pixelated;
+      overflow: hidden;
+      transition: all 0.5s;
+    }
+    
+    /* City Background */
+    #office.city-view {
+      background: 
+        /* Street grid */
+        repeating-linear-gradient(0deg, transparent, transparent 49px, #2a2a35 49px, #2a2a35 50px),
+        repeating-linear-gradient(90deg, transparent, transparent 79px, #2a2a35 79px, #2a2a35 80px),
+        /* Dark city base */
+        linear-gradient(180deg, #0a0f1a 0%, #15203a 50%, #0a1525 100%);
+      image-rendering: pixelated;
+    }
+    
+    /* City buildings silhouette */
+    #office.city-view::before {
+      content: '';
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: 
+        /* Buildings layer */
+        linear-gradient(180deg, transparent 0%, transparent 30%),
+        repeating-linear-gradient(90deg, 
+          #1a1a2a 0px, #1a1a2a 30px,
+          #252535 30px, #252535 60px,
+          #1a1a2a 60px, #1a1a2a 100px,
+          #2a2a3a 100px, #2a2a3a 150px,
+          #1a1a2a 150px, #1a1a2a 180px
+        );
+      opacity: 0.8;
+    }
+    
+    /* City lights */
+    #office.city-view .city-lights {
+      display: block;
+    }
+    
+    .city-lights {
+      display: none;
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      right: 0;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .light {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: cityBlink 2s infinite;
+    }
+    
+    @keyframes cityBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    /* Room walls */
+    .wall {
+      position: absolute;
+      background: linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%);
+      border: 4px solid #4a4a5a;
+    }
+    
+    .wall-top { top: 0; left: 0; right: 0; height: 20px; }
+    .wall-bottom { bottom: 0; left: 0; right: 0; height: 20px; }
+    .wall-left { top: 0; bottom: 0; left: 0; width: 20px; }
+    .wall-right { top: 0; bottom: 0; right: 0; width: 20px; }
+    
+    /* Furniture / Zones as pixel art */
+    .furniture {
+      position: absolute;
+      image-rendering: pixelated;
+    }
+    
+    /* Desk area */
+    #desk {
+      left: 80px;
+      top: 60px;
+      width: 180px;
+      height: 100px;
+      background: linear-gradient(180deg, #5a4a3a 0%, #4a3a2a 100%);
+      border: 4px solid #7a6a5a;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #desk::before {
+      content: "💻 DESK";
+      font-size: 8px;
+      color: #aaa;
+    }
+    
+    /* Couch area */
+    #couch {
+      left: 30px;
+      bottom: 50px;
+      width: 120px;
+      height: 70px;
+      background: linear-gradient(180deg, #8a4a6a 0%, #6a3a5a 100%);
+      border: 4px solid #aa6a8a;
+      border-radius: 8px 8px 4px 4px;
+    }
+    
+    #couch::after {
+      content: "🛋️";
+      position: absolute;
+      font-size: 24px;
+      left: 40px;
+      top: 15px;
+    }
+    
+    /* Server rack */
+    #server {
+      right: 40px;
+      top: 50px;
+      width: 80px;
+      height: 120px;
+      background: linear-gradient(180deg, #2a3a4a 0%, #1a2a3a 100%);
+      border: 4px solid #4a5a6a;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 4px;
+    }
+    
+    .server-light {
+      width: 100%;
+      height: 8px;
+      background: #0f0;
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      50% { opacity: 0.3; }
+    }
+    
+    #server::before {
+      content: "SERVER";
+      font-size: 6px;
+      color: #0f0;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    
+    /* Plants decoration */
+    .plant {
+      position: absolute;
+      font-size: 24px;
+    }
+    
+    #plant1 { left: 320px; top: 40px; }
+    #plant2 { right: 150px; bottom: 40px; }
+    
+    /* NPCs as pixel characters */
+    .npc {
+      position: absolute;
+      width: 48px;
+      height: 64px;
+      cursor: pointer;
+      transition: left 0.5s linear, top 0.5s linear;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .npc-sprite {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      animation: bounce 0.5s infinite alternate;
+    }
+    
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-4px); }
+    }
+    
+    .npc.npc-working .npc-sprite { animation: work 0.3s infinite; }
+    @keyframes work { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    
+    .npc.npc-idle .npc-sprite { animation: idle 2s infinite; }
+    @keyframes idle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    
+    .npc-name {
+      font-size: 6px;
+      color: #fff;
+      background: rgba(0,0,0,0.8);
+      padding: 2px 4px;
+      margin-top: 2px;
+      border-radius: 2px;
+    }
+    
+    .npc-state {
+      position: absolute;
+      top: -8px;
+      font-size: 12px;
+      animation: float 1s infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    
+    /* Sidebar */
+    #sidebar {
+      width: 240px;
+      background: linear-gradient(180deg, #1a1a2a 0%, #0a0a15 100%);
+      border-left: 4px solid #2a2a3a;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    #sidebar h2 {
+      color: var(--accent-gold);
+      font-size: 10px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    
+    .agent-card {
+      background: linear-gradient(180deg, #2a2a3a 0%, #1a1a2a 100%);
+      border: 3px solid #3a3a4a;
+      border-radius: 4px;
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .agent-card:hover {
+      border-color: var(--accent-gold);
+      transform: scale(1.02);
+    }
+    
+    .agent-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .agent-info .name {
+      font-size: 8px;
+      color: #fff;
+    }
+    
+    .agent-info .state {
+      font-size: 6px;
+      color: var(--text-dim);
+    }
+    
+    .agent-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 6px;
+    }
+    
+    .stat-zone { color: var(--accent-cyan); }
+    .stat-mood { color: var(--accent-purple); }
+    
+    .ping-btn {
+      background: linear-gradient(180deg, #4a7aaa 0%, #2a4a6a 100%);
+      border: none;
+      color: #fff;
+      padding: 6px 10px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+      width: 100%;
+      border-radius: 4px;
+    }
+    
+    .ping-btn:hover {
+      background: linear-gradient(180deg, #5a8aba 0%, #3a5a7a 100%);
+    }
+    
+    /* Activity log */
+    #activity {
+      flex: 1;
+      background: #0a0a12;
+      border: 3px solid #2a2a3a;
+      border-radius: 4px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    
+    #activity h3 {
+      color: var(--accent-cyan);
+      font-size: 8px;
+      margin-bottom: 8px;
+    }
+    
+    #log p {
+      font-size: 6px;
+      color: var(--text-dim);
+      margin: 3px 0;
+      line-height: 1.4;
+    }
+    
+    /* Clock */
+    #clock {
+      color: var(--accent-gold);
+    }
+    
+    /* Legend */
+    #legend {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.9);
+      padding: 10px;
+      border: 3px solid #3a3a4a;
+      border-radius: 4px;
+      font-size: 7px;
+      transition: all 0.3s;
+    }
+    
+    #legend.city-view {
+      border-color: #e67e22;
+    }
+    
+    #legend h4 {
+      color: var(--accent-gold);
+      margin-bottom: 8px;
+      font-size: 7px;
+    }
+    
+    #legend.city-view h4 {
+      color: #e67e22;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+    
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    /* City Zone Markers */
+    .zone-marker {
+      position: absolute;
+      width: 60px;
+      height: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 6px;
+      color: #888;
+      border: 2px dashed #444;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: all 0.3s;
+    }
+    
+    .zone-marker.streets { border-color: #3498db; color: #3498db; }
+    .zone-marker.storefronts { border-color: #9b59b6; color: #9b59b6; }
+    .zone-marker.parks { border-color: #2ecc71; color: #2ecc71; }
+    .zone-marker.transit { border-color: #f39c12; color: #f39c12; }
+    .zone-marker.leisure { border-color: #e74c3c; color: #e74c3c; }
+    
+    .zone-marker .emoji { font-size: 14px; margin-bottom: 2px; }
+    
+    #city-zones {
+      display: none;
+    }
+    
+    #office.city-view #hq-zones { display: none; }
+    #office.city-view #city-zones { display: block; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="header">
+      <h1>🦀 PLANET EXPRESS HQ</h1>
+      <div id="header-stats">
+        <span>👥 <span id="agent-count">7</span></span>
+        <span>🕐 <span id="clock">00:00</span></span>
+        <button class="view-toggle" id="viewToggle" onclick="toggleWorld()">🌆 CITY</button>
+      </div>
+    </div>
+    
+    <div id="main">
+      <div id="office">
+        <!-- Room boundaries -->
+        <div class="wall wall-top"></div>
+        <div class="wall wall-bottom"></div>
+        <div class="wall wall-left"></div>
+        <div class="wall wall-right"></div>
+        
+        <!-- Furniture / Zones -->
+        <div class="furniture" id="desk"></div>
+        <div class="furniture" id="couch"></div>
+        <div class="furniture" id="server">
+          <div class="server-light" style="background:#0f0"></div>
+          <div class="server-light" style="background:#0ff"></div>
+          <div class="server-light" style="background:#0f0"></div>
+          <div class="server-light" style="background:#f00"></div>
+        </div>
+        
+        <!-- Plants -->
+        <div class="plant" id="plant1">🌿</div>
+        <div class="plant" id="plant2">🌵</div>
+        
+        <!-- NPCs rendered here -->
+        <div id="npcs"></div>
+        
+        <!-- Legend -->
+        <div id="legend">
+          <h4>ZONES</h4>
+          <div id="hq-zones">
+            <div class="legend-item">
+              <span class="legend-icon">💻</span>
+              <span>Desk - Work</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🛋️</span>
+              <span>Couch - Idle</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🐛</span>
+              <span>Server - Error</span>
+            </div>
+          </div>
+          <div id="city-zones">
+            <div class="legend-item">
+              <span class="legend-icon">🛣️</span>
+              <span>Streets</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🏪</span>
+              <span>Storefronts</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🌳</span>
+              <span>Parks</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🚌</span>
+              <span>Transit</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🎮</span>
+              <span>Leisure</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- City Zone Markers -->
+        <div id="city-zone-markers" style="display:none;">
+          <div class="zone-marker streets" style="left:100px;top:150px;"><span class="emoji">🛣️</span>Main St</div>
+          <div class="zone-marker streets" style="left:200px;top:80px;"><span class="emoji">🛣️</span>Side St</div>
+          <div class="zone-marker storefronts" style="left:120px;top:50px;"><span class="emoji">🤖</span>Robot Shop</div>
+          <div class="zone-marker storefronts" style="left:180px;top:120px;"><span class="emoji">🍔</span>Food Court</div>
+          <div class="zone-marker storefronts" style="left:280px;top:180px;"><span class="emoji">💻</span>Tech Store</div>
+          <div class="zone-marker parks" style="left:160px;top:220px;"><span class="emoji">🌳</span>Central Pk</div>
+          <div class="zone-marker parks" style="left:250px;top:280px;"><span class="emoji">⛲</span>Plaza</div>
+          <div class="zone-marker transit" style="left:100px;top:280px;"><span class="emoji">🚌</span>Bus Stop</div>
+          <div class="zone-marker transit" style="left:320px;top:100px;"><span class="emoji">🚇</span>Metro</div>
+          <div class="zone-marker leisure" style="left:120px;top:300px;"><span class="emoji">🎬</span>Cinema</div>
+          <div class="zone-marker leisure" style="left:270px;top:50px;"><span class="emoji">🎮</span>Arcade</div>
+          <div class="zone-marker leisure" style="left:200px;top:170px;"><span class="emoji">🍺</span>Bar</div>
+        </div>
+      </div>
+      
+      <div id="sidebar">
+        <h2>👥 CREW</h2>
+        <div id="agent-list"></div>
+        
+        <div id="activity">
+          <h3>📜 LOG</h3>
+          <div id="log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3001/api/demo';
+    let currentWorld = 'hq';
+    
+    // Zone positions for each state
+    const stateZones = {
+      'working': { x: 140, y: 80, zone: 'desk', emoji: '💻' },
+      'idle': { x: 70, y: 280, zone: 'couch', emoji: '💤' },
+      'walking': { x: 150, y: 180, zone: 'moving', emoji: '🚶' },
+      'socializing': { x: 100, y: 300, zone: 'couch', emoji: '💬' },
+      'error': { x: 450, y: 80, zone: 'server', emoji: '🐛' },
+      'resting': { x: 80, y: 320, zone: 'couch', emoji: '😴' },
+    };
+    
+    // City zone positions (scaled to fit in city view)
+    const cityStateZones = {
+      'working': { x: 200, y: 150, zone: 'tech-store', emoji: '💻' },
+      'idle': { x: 180, y: 280, zone: 'park', emoji: '😌' },
+      'walking': { x: 200, y: 200, zone: 'street', emoji: '🚶' },
+      'socializing': { x: 250, y: 250, zone: 'bar', emoji: '💬' },
+      'error': { x: 320, y: 100, zone: 'metro', emoji: '🐛' },
+      'resting': { x: 150, y: 300, zone: 'cinema', emoji: '😴' },
+    };
+    
+    // Agent avatars - pixel style emoji
+    const avatars = {
+      'Fry': { emoji: '👨‍🚀', color: '#3498db' },
+      'Bender': { emoji: '🤖', color: '#2ecc71' },
+      'Leela': { emoji: '👩‍🦰', color: '#9b59b6' },
+      'Professor': { emoji: '👨‍🔬', color: '#e74c3c' },
+      'Amy': { emoji: '👩‍🎓', color: '#e67e22' },
+      'Zoidberg': { emoji: '🦀', color: '#f39c12' },
+      'Conrad': { emoji: '🧠', color: '#1abc9c' },
+    };
+    
+    let npcs = [];
+    
+    async function loadWorld() {
+      try {
+        const res = await fetch(API + '/status');
+        const data = await res.json();
+        npcs = data.npcs;
+        currentWorld = data.currentWorld || 'hq';
+        renderWorld();
+        document.getElementById('agent-count').textContent = npcs.length;
+      } catch(e) {
+        log('Error: ' + e.message);
+      }
+    }
+    
+    function renderWorld() {
+      const office = document.getElementById('office');
+      const legend = document.getElementById('legend');
+      const toggle = document.getElementById('viewToggle');
+      const markers = document.getElementById('city-zone-markers');
+      const header = document.querySelector('#header h1');
+      
+      if (currentWorld === 'city') {
+        office.classList.add('city-view');
+        legend.classList.add('city-view');
+        toggle.classList.add('city-mode');
+        toggle.textContent = '🏢 HQ';
+        markers.style.display = 'block';
+        header.textContent = '🌆 NEW NEW YORK';
+      } else {
+        office.classList.remove('city-view');
+        legend.classList.remove('city-view');
+        toggle.classList.remove('city-mode');
+        toggle.textContent = '🌆 CITY';
+        markers.style.display = 'none';
+        header.textContent = '🦀 PLANET EXPRESS HQ';
+      }
+      
+      renderNPCs();
+      renderSidebar();
+    }
+    
+    function renderNPCs() {
+      const container = document.getElementById('npcs');
+      container.innerHTML = '';
+      
+      // Filter NPCs based on current world
+      const visibleNPCs = npcs.filter(npc => npc.world === currentWorld);
+      
+      visibleNPCs.forEach((npc) => {
+        const states = currentWorld === 'hq' ? stateZones : cityStateZones;
+        const state = states[npc.state] || states['idle'];
+        // Add some randomness
+        const x = state.x + (Math.random() * 30 - 15);
+        const y = state.y + (Math.random() * 30 - 15);
+        
+        const av = avatars[npc.name] || { emoji: '❓', color: '#888' };
+        
+        const npcDiv = document.createElement('div');
+        npcDiv.className = `npc npc-${npc.state}`;
+        npcDiv.style.left = x + 'px';
+        npcDiv.style.top = y + 'px';
+        
+        npcDiv.innerHTML = `
+          <span class="npc-state">${state.emoji}</span>
+          <div class="npc-sprite" style="background:${av.color};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid #fff;box-shadow:0 4px 0 #000;">${av.emoji}</div>
+          <span class="npc-name">${npc.name}</span>
+        `;
+        
+        container.appendChild(npcDiv);
+      });
+    }
+    
+    function renderSidebar() {
+      const list = document.getElementById('agent-list');
+      list.innerHTML = '';
+      
+      // Filter NPCs based on current world
+      const visibleNPCs = npcs.filter(npc => npc.world === currentWorld);
+      
+      visibleNPCs.forEach(npc => {
+        const av = avatars[npc.name] || { emoji: '❓', color: '#888' };
+        const states = currentWorld === 'hq' ? stateZones : cityStateZones;
+        const state = states[npc.state] || states['idle'];
+        
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.innerHTML = `
+          <div class="agent-card-header">
+            <div class="agent-avatar" style="background:${av.color}">${av.emoji}</div>
+            <div class="agent-info">
+              <div class="name">${npc.name}</div>
+              <div class="state">${state.emoji} ${npc.state}</div>
+            </div>
+          </div>
+          <div class="agent-stats">
+            <span class="stat-zone">📍 ${npc.zone}</span>
+            <span class="stat-mood">${getMoodEmoji(npc.mood)} ${npc.mood}</span>
+          </div>
+          <button class="ping-btn" onclick="ping('${npc.agentId}', '${npc.name}')">📱 PING</button>
+        `;
+        list.appendChild(card);
+      });
+    }
+    
+    async function toggleWorld() {
+      try {
+        const res = await fetch(API + '/world/switch', { method: 'POST' });
+        const data = await res.json();
+        currentWorld = data.world;
+        renderWorld();
+        log(`🌍 Switched to ${data.worldName}`);
+      } catch(e) {
+        log('Error switching world: ' + e.message);
+      }
+    }
+    
+    function getMoodEmoji(mood) {
+      const moods = {
+        'happy': '😊', 'neutral': '😐', 'busy': '😤', 
+        'focused': '🎯', 'tired': '😴', 'excited': '🤩'
+      };
+      return moods[mood] || '😐';
+    }
+    
+    async function ping(agentId, name) {
+      log(`📱 Pinging ${name}...`);
+      try {
+        await fetch(API + '/ping', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({agentId, message: `Hey ${name}!`})
+        });
+        log(`✓ Message sent to ${name}`);
+        log(`💬 Check Discord!`);
+      } catch(e) { 
+        log('Error: ' + e.message); 
+      }
+    }
+    
+    function log(msg) {
+      const logDiv = document.getElementById('log');
+      const p = document.createElement('p');
+      const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+      p.textContent = `[${time}] ${msg}`;
+      logDiv.prepend(p);
+      if (logDiv.children.length > 20) {
+        logDiv.lastChild.remove();
+      }
+    }
+    
+    // Clock
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.toLocaleTimeString('en-US', {hour12: false});
+    }, 1000);
+    
+    // Initial load
+    loadWorld();
+    setInterval(loadWorld, 3000);
+    log('🌐 Connected to Planet Express HQ');
+  </script>
+</body>
+</html>

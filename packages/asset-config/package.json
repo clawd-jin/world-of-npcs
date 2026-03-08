@@ -1,1 +1,9 @@
-{"name": "@world-of-npcs/asset-config", "version": "1.0.0"}
+{
+  "name": "@world-of-npcs/asset-config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build required'",
+    "test": "echo 'No tests'"
+  }
+}

@@ -571,4 +571,5 @@ export class SimulationEngine {
   getBountyCount(): number {
     return this.bounties.size;
   }
+
 }

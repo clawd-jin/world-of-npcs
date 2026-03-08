@@ -1,119 +1,105 @@
 import { Router, Request, Response } from 'express';
-import { TaskRepository, TaskType, TaskStatus } from '@world-of-npcs/task-core';
-import { Task } from '@world-of-npcs/shared-types';
+import { TaskService, CreateTaskInput, UpdateTaskInput } from '@world-of-npcs/task-core';
+import { TaskStatus } from '@world-of-npcs/shared-types';
 
 const router = Router();
-const taskRepository = new TaskRepository();
+const taskService = new TaskService();
 
-// POST / - Create a new task
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { ownerUserId, type, title, description, priority = 0, mappedBehaviorId = null, rewardValue = 0 } = req.body;
-
-    if (!ownerUserId || !type || !title || !description) {
-      return res.status(400).json({ error: 'Missing required fields: ownerUserId, type, title, description' });
-    }
-
-    const task: Task = {
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      agentId: null,
-      ownerUserId,
-      type: type as TaskType,
-      title,
-      description,
-      priority,
-      status: 'queued' as TaskStatus,
-      mappedBehaviorId,
-      rewardValue,
-      createdAt: new Date(),
-      completedAt: null,
-    };
-
-    const created = await taskRepository.create(task);
-    return res.status(201).json(created);
-  } catch (error) {
-    console.error('Error creating task:', error);
-    return res.status(500).json({ error: 'Failed to create task' });
-  }
-});
-
-// GET / - List all tasks
+// GET /api/tasks - List all tasks (with optional ownerUserId filter)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { ownerUserId, agentId } = req.query;
-
-    let tasks: Task[];
-    
-    if (ownerUserId) {
-      tasks = await taskRepository.findByOwner(ownerUserId as string);
-    } else if (agentId) {
-      tasks = await taskRepository.findByAgent(agentId as string);
-    } else {
-      tasks = await taskRepository.findAll();
-    }
-
-    return res.json(tasks);
+    const { ownerUserId } = req.query;
+    const tasks = await taskService.listTasks(ownerUserId as string | undefined);
+    res.json({ tasks, total: tasks.length });
   } catch (error) {
-    console.error('Error listing tasks:', error);
-    return res.status(500).json({ error: 'Failed to list tasks' });
+    res.status(500).json({ error: 'Failed to list tasks', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
-// GET /:id - Get a specific task
+// GET /api/tasks/:id - Get task by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const task = await taskRepository.findById(id);
-
+    const task = await taskService.getTask(id);
     if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Task not found', taskId: id });
     }
-
-    return res.json(task);
+    res.json(task);
   } catch (error) {
-    console.error('Error getting task:', error);
-    return res.status(500).json({ error: 'Failed to get task' });
+    res.status(500).json({ error: 'Failed to get task', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
-// PATCH /:id - Update a task
-router.patch('/:id', async (req: Request, res: Response) => {
+// POST /api/tasks - Create new task
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const input: CreateTaskInput = req.body;
+    
+    // Validate required fields
+    if (!input.ownerUserId || !input.type || !input.title || !input.description) {
+      return res.status(400).json({ error: 'Missing required fields: ownerUserId, type, title, description' });
+    }
+    
+    const task = await taskService.createTask(input);
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create task', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// PUT /api/tasks/:id - Update task
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-
-    const existingTask = await taskRepository.findById(id);
-    if (!existingTask) {
-      return res.status(404).json({ error: 'Task not found' });
+    const input: UpdateTaskInput = req.body;
+    
+    const existing = await taskService.getTask(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Task not found', taskId: id });
     }
-
-    // Prevent updating immutable fields
-    const { id: _id, createdAt: _createdAt, ...allowedUpdates } = updates;
-
-    const updatedTask = await taskRepository.update(id, allowedUpdates);
-    return res.json(updatedTask);
+    
+    const updated = await taskService.updateTask(id, input);
+    res.json(updated);
   } catch (error) {
-    console.error('Error updating task:', error);
-    return res.status(500).json({ error: 'Failed to update task' });
+    res.status(500).json({ error: 'Failed to update task', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
-// DELETE /:id - Delete a task
+// DELETE /api/tasks/:id - Delete task
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
-    const existingTask = await taskRepository.findById(id);
-    if (!existingTask) {
-      return res.status(404).json({ error: 'Task not found' });
+    const deleted = await taskService.deleteTask(id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Task not found', taskId: id });
     }
-
-    await taskRepository.delete(id);
-    return res.status(204).send();
+    res.json({ success: true, taskId: id });
   } catch (error) {
-    console.error('Error deleting task:', error);
-    return res.status(500).json({ error: 'Failed to delete task' });
+    res.status(500).json({ error: 'Failed to delete task', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
-export default router;
+// POST /api/tasks/:id/assign - Assign task to agent
+router.post('/:id/assign', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { agentId } = req.body;
+    
+    if (!agentId) {
+      return res.status(400).json({ error: 'Missing required field: agentId' });
+    }
+    
+    const task = await taskService.getTask(id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found', taskId: id });
+    }
+    
+    // Use acceptTask to assign the agent (queued → accepted)
+    const updated = await taskService.acceptTask(id, agentId);
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to assign task', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+export const tasksRouter = router;

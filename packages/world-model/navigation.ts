@@ -198,7 +198,7 @@ export class Navigator {
   }
   
   getCurrentZone(): Zone | null {
-    return getZoneById(this.currentZoneId);
+    return getZoneById(this.currentZoneId) ?? null;
   }
   
   moveTo(zoneId: string): NavigationPath | null {

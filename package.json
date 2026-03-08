@@ -1,0 +1,17 @@
+{
+  "name": "world-of-npcs",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=apps/server-api && npm run build --workspace=apps/simulation-service",
+    "dev:server": "npm run dev --workspace=apps/server-api",
+    "dev:sim": "npm run dev --workspace=apps/simulation-service"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

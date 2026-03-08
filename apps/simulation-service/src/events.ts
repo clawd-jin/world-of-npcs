@@ -6,7 +6,7 @@ export interface SimulationEvent {
   type: string;
   timestamp: number;
   tick: number;
-  data: any;
+  data?: any;
 }
 
 export interface AgentEvent extends SimulationEvent {
@@ -80,6 +80,8 @@ export interface AgentState {
   credits: number;
   inventory: string[];
   status: 'idle' | 'active' | 'resting' | 'dead';
+  zoneId?: string;
+  mood?: string;
 }
 
 export interface Intention {
@@ -157,3 +159,13 @@ export class SimulationEventEmitter {
 
 // Default instance
 export const simulationEvents = new SimulationEventEmitter();
+
+// Simplified Zone for API (not full world-model)
+export interface Zone {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}

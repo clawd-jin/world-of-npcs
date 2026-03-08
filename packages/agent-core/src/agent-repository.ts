@@ -13,6 +13,9 @@ export interface CreateAgentDTO {
   personalityProfile: object
   location: Location
   skillProfile: SkillProfile
+  skills?: string[]          // Array of skill names: coding, research, delivery, social
+  level?: number             // Agent level (default: 1)
+  experience?: number        // Total experience points (default: 0)
   metadata?: object
 }
 
@@ -56,6 +59,9 @@ export class AgentRepository {
       energy: 100,
       mood: 'neutral',
       skillProfile: dto.skillProfile,
+      skills: dto.skills || [],
+      level: dto.level || 1,
+      experience: dto.experience || 0,
       relationshipStats: {
         totalRelationships: 0,
         averageFamiliarity: 0,

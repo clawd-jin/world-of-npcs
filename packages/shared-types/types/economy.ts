@@ -1,8 +1,4 @@
 // Wallet interface
-export interface Wallet {
-  balance: number
-  lifetimeEarnings: number
-}
 
 // Economy ledger transaction type
 export type TransactionType = 

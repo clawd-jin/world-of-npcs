@@ -4,6 +4,7 @@
   "description": "World of NPCs Mobile Application",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'React Native - use expo or build separately'",
     "start": "react-native start",
     "android": "react-native run-android",
     "ios": "react-native run-ios"

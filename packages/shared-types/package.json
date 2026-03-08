@@ -1,1 +1,10 @@
-{"name": "@world-of-npcs/shared-types", "version": "1.0.0"}
+{
+  "name": "@world-of-npcs/shared-types",
+  "version": "1.0.0",
+  "main": "index.js",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'No tests'"
+  }
+}

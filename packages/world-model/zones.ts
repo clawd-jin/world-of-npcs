@@ -37,7 +37,7 @@ export interface Zone {
 }
 
 // HQ Interior Zones
-export const HQ_ZONES: Record<ZoneType, Zone> = {
+export const HQ_ZONES: Partial<Record<ZoneType, Zone>> = {
   [ZoneType.OFFICE_FLOOR]: {
     id: 'hq_office_floor',
     name: 'Office Floor',
@@ -57,7 +57,7 @@ export const HQ_ZONES: Record<ZoneType, Zone> = {
     description: 'Conference room for briefings and team meetings',
     connectedZones: ['hq_office_floor', 'hq_hallways'],
     objects: ['meeting_table', 'chair', 'whiteboard'],
-    properties: { capacity: 12, has projector: true },
+    properties: { capacity: 12, "hasProjector": true },
   },
   
   [ZoneType.LOUNGE]: {
@@ -124,7 +124,7 @@ export const HQ_ZONES: Record<ZoneType, Zone> = {
 };
 
 // City Zones
-export const CITY_ZONES: Record<ZoneType, Zone> = {
+export const CITY_ZONES: Partial<Record<ZoneType, Zone>> = {
   [ZoneType.STREET]: {
     id: 'city_street',
     name: 'Street',
@@ -182,7 +182,7 @@ export const CITY_ZONES: Record<ZoneType, Zone> = {
 };
 
 // All zones combined
-export const ZONES: Record<ZoneType, Zone> = {
+export const ZONES: Partial<Record<ZoneType, Zone>> = {
   ...HQ_ZONES,
   ...CITY_ZONES,
 };

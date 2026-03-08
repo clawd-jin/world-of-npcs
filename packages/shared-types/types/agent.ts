@@ -90,6 +90,9 @@ export interface Agent {
   energy: number                 // 0-100
   mood: string
   skillProfile: SkillProfile
+  skills: string[]              // Array of skill names: coding, research, delivery, social
+  level: number                 // Agent level (1+)
+  experience: number            // Total experience points
   relationshipStats: RelationshipStats
   wallet: Wallet
   permissions: Permissions
